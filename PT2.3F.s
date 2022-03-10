@@ -10756,17 +10756,17 @@ PrintSong3
 	MOVE.L	SavIt(PC),A0
 	MOVE.W	22(A0),D0
 	ADD.W	D0,D0
-	LEA	ascii.MSG4,A0
+	LEA	ascii_MSG4,A0
 	JSR	IntToHexASCII
 	MOVE.L	SavIt(PC),A0
 	MOVE.W	26(A0),D0
 	ADD.W	D0,D0
-	LEA	ascii.MSG5,A0
+	LEA	ascii_MSG5,A0
 	JSR	IntToHexASCII
 	MOVE.L	SavIt(PC),A0
 	MOVE.W	28(A0),D0
 	ADD.W	D0,D0
-	LEA	ascii.MSG6,A0
+	LEA	ascii_MSG6,A0
 	JSR	IntToHexASCII
 	MOVE.L	DOSBase,A6
 	MOVE.L	FileHandle,D1
@@ -25523,9 +25523,9 @@ PtotText	dc.b	9
 PattXText1	dc.b	"0"
 PattXText2	dc.b	"0 : "
 PpText		dc.b	'                        0000'
-ascii.MSG4	dc.b	'  0000'
-ascii.MSG5	dc.b	'  0000'
-ascii.MSG6	dc.b	'    ',$D,$A
+ascii_MSG4	dc.b	'  0000'
+ascii_MSG5	dc.b	'  0000'
+ascii_MSG6	dc.b	'    ',$D,$A
 PnText2		dc.b	"        "
 	cnop 0,2
 		dc.b	0
