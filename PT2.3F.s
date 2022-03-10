@@ -26027,7 +26027,7 @@ Sampler CLR.B	RawKeyCode
 	LSR.W	#1,D0
 	LEA	$DFF000,A0
 	LEA	$AA(A0),A5
-	LEA	$BA(A0),A6
+	;LEA	$BA(A0),A6
 	MOVE.W	D0,$A6(A0)
 	MOVE.W	D0,$B6(A0)
 	MOVEQ.L	#$20,D0
@@ -26035,18 +26035,19 @@ Sampler CLR.B	RawKeyCode
 	MOVE.W	D0,$B8(A0)
 	MOVEQ	#0,D0
 	MOVE.W	D0,(A5)
-	MOVE.W	D0,(A6)
-	MOVE.B	#6,$BFD200
-	MOVEQ.L	#2,D0
-	MOVE.B	D0,$BFD000
+	MOVE.W	D0,$10(A5)
+	MOVE.B	#4,$BFD200 ; ciab ddra = two lowest are inputs
+	MOVE.B	#0,$BFD000 ; ciab pra = 0
 	;MOVE.B	#0,$BFE301
-	SF	$BFE301
+	MOVE.B	#$C0,$BFE301        ; ciaa ddrb
+	MOVE.B	#$ff,$BFE101        ; ciaa prb
 	LEA	GraphOffsets(PC),A0
 	LEA	TempSampArea,A1
 	MOVE.L	TextBplPtr(PC),A2
 	LEA	$09E8-40(A2),A2
-	LEA	$BFE101,A3
+	LEA	$BFE101,A3 ; A3 = ciaa prb
 	LEA	$DFF01E,A4 ; _custom+intreqr
+	LEA	$BFD000,A6 ; A6 = ciab pra
 	MOVE.W	#$0180,D7
 	MOVEQ	#6,D6
 	MOVEQ	#10,D3
@@ -26055,17 +26056,24 @@ monilop2
 monilop4
 	MOVEQ	#7,D4
 monilop3
-	BTST	D7,(A4)
+	BTST	D7,(A4) ; check AUD1 bit?
 	BEQ.B	monilop3
-	MOVE.W	D7,$7E(A4)
+	MOVE.W	D7,$7E(A4) ; intreq. clear AUD1 and AUD0 ?
+	BCLR    #6,(A3) ; stop sampling?
 	MOVEQ	#0,D0
-	MOVE.B	(A3),D0
+	MOVE.B	(A3),D0 ; parallel data to D0
+	LSL.B   #2,D0
+	MOVE.B	(A6),D1 ; parallel ctrl data to D1
+	AND.B   #3,D1
+	ADD.B   D1,D0   ; concat bits and make one sample!
+	BSET    #6,(A3) ; start sampling
 	MOVE.W	D0,D1
-	SUB.B	D7,D0
-	MOVE.B	D0,(A5)
-	MOVE.B	D0,(A6)
-	LSR.W	#3,D1
-	ADD.W	D1,D1
+	SUB.B	D7,D0   ; subtract $0180 from sampledata?
+	MOVE.B	D0,(A5) ; write D0 (sample-0180) to AUD0
+	MOVE.B	D0,$10(A5) ; -..- to AUD1
+	;MOVE.B  D1,$DFF180
+	LSR.W	#3,D1   ; divide unsigned sample by 8
+	ADD.W	D1,D1   ; multiply by 2
 	MOVE.W	(A0,D1.W),D0
 	MOVE.W	(A1),D1
 	MOVE.W	D0,(A1)+
@@ -26126,8 +26134,10 @@ samalcok
 	LEA	$DFF09C,A2 ; _custom+intreq
 	LEA	$BFE101,A3 ; parallel port
 	LEA	$DFF01E,A4 ; _custom+intreqr
-	LEA	$DFF0BA,A6
-	
+	;LEA	$DFF0BA,A6
+	LEA	$BFD000,A6 ; A6 = ciab pra
+
+
 	MOVE.W	#$0180,D7
 	MOVEQ	#6,D6
 	MOVEQ	#0,D5
@@ -26135,10 +26145,23 @@ samploop
 	BTST	D7,(A4)
 	BEQ.B	samploop
 	MOVE.W	D7,(A2)
-	MOVE.B	(A3),D0
+
+;	MOVE.B	(A3),D0
+
+	BCLR    #6,(A3) ; stop sampling?
+	MOVEQ	#0,D0
+	MOVE.B	(A3),D0 ; parallel data to D0
+	LSL.B   #2,D0
+	MOVE.B	(A6),D1 ; parallel ctrl data to D1
+	AND.B   #3,D1
+	ADD.B   D1,D0   ; concat bits and make one sample!
+	BSET    #6,(A3) ; start sampling
+
 	SUB.B	D7,D0
+
 	MOVE.B	D0,(A5)
-	MOVE.B	D0,(A6)
+	MOVE.B	D0,$10(A5) ; -..- to AUD1
+
 	MOVE.B	D0,(A1)+
 	ADDQ.L	#1,D5		; .W -> .L (128K fix)
 	CMP.L	D4,D5		; .W -> .L (128K fix)
